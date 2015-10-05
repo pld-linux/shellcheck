@@ -1,0 +1,117 @@
+diff --git i/ShellCheck.cabal w/ShellCheck.cabal
+index 6e46dfe..8223f3a 100644
+--- i/ShellCheck.cabal
++++ w/ShellCheck.cabal
+@@ -43,8 +43,7 @@ library
+       json,
+       mtl,
+       parsec,
+-      regex-tdfa,
+-      QuickCheck >= 2.7.4
++      regex-tdfa
+     exposed-modules:
+       ShellCheck.Analytics
+       ShellCheck.AST
+@@ -66,8 +65,7 @@ executable shellcheck
+       mtl,
+       parsec,
+       regex-tdfa,
+-      transformers,
+-      QuickCheck >= 2.7.4
++      transformers
+     main-is: shellcheck.hs
+ 
+ test-suite test-shellcheck
+diff --git i/ShellCheck/Analytics.hs w/ShellCheck/Analytics.hs
+index fe2fcf4..80bc7a0 100644
+--- i/ShellCheck/Analytics.hs
++++ w/ShellCheck/Analytics.hs
+@@ -16,7 +16,7 @@
+     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ -}
+ {-# LANGUAGE TemplateHaskell, FlexibleContexts #-}
+-module ShellCheck.Analytics (AnalysisOptions(..), defaultAnalysisOptions, filterByAnnotation, runAnalytics, shellForExecutable, runTests) where
++module ShellCheck.Analytics (AnalysisOptions(..), defaultAnalysisOptions, filterByAnnotation, runAnalytics, shellForExecutable) where
+ 
+ import Control.Arrow (first)
+ import Control.Monad
+@@ -32,11 +32,9 @@ import Debug.Trace
+ import ShellCheck.AST
+ import ShellCheck.Options
+ import ShellCheck.Data
+-import ShellCheck.Parser hiding (runTests)
++import ShellCheck.Parser
+ import ShellCheck.Regex
+ import qualified Data.Map as Map
+-import Test.QuickCheck.All (forAllProperties)
+-import Test.QuickCheck.Test (quickCheckWithResult, stdArgs, maxSuccess)
+ 
+ data Parameters = Parameters {
+     variableFlow :: [StackData],
+@@ -3310,7 +3308,3 @@ checkMaskedReturns _ t@(T_SimpleCommand id _ (cmd:rest)) = potentially $ do
+         T_DollarExpansion {} -> True
+         _ -> False
+ checkMaskedReturns _ _ = return ()
+-
+-
+-return []
+-runTests =  $( [| $(forAllProperties) (quickCheckWithResult (stdArgs { maxSuccess = 1 }) ) |])
+diff --git i/ShellCheck/Parser.hs w/ShellCheck/Parser.hs
+index fd2cbea..0ece932 100644
+--- i/ShellCheck/Parser.hs
++++ w/ShellCheck/Parser.hs
+@@ -16,7 +16,7 @@
+     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ -}
+ {-# LANGUAGE NoMonomorphismRestriction, TemplateHaskell, FlexibleContexts #-}
+-module ShellCheck.Parser (Note(..), Severity(..), parseShell, ParseResult(..), ParseNote(..), sortNotes, noteToParseNote, runTests, readScript) where
++module ShellCheck.Parser (Note(..), Severity(..), parseShell, ParseResult(..), ParseNote(..), sortNotes, noteToParseNote, readScript) where
+ 
+ import ShellCheck.AST
+ import ShellCheck.Data
+@@ -34,7 +34,6 @@ import Prelude hiding (readList)
+ import System.IO
+ import Text.Parsec.Error
+ import GHC.Exts (sortWith)
+-import Test.QuickCheck.All (quickCheckAll)
+ 
+ backslash = char '\\'
+ linefeed = optional carriageReturn >> char '\n'
+@@ -2163,7 +2162,3 @@ parseShell options filename contents =
+ 
+ lt x = trace (show x) x
+ ltt t = trace (show t)
+-
+-return []
+-runTests = $quickCheckAll
+-
+diff --git i/ShellCheck/Simple.hs w/ShellCheck/Simple.hs
+index 71cde43..70f769c 100644
+--- i/ShellCheck/Simple.hs
++++ w/ShellCheck/Simple.hs
+@@ -16,14 +16,13 @@
+     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ -}
+ {-# LANGUAGE TemplateHaskell #-}
+-module ShellCheck.Simple (shellCheck, ShellCheckComment, scLine, scColumn, scSeverity, scCode, scMessage, runTests) where
++module ShellCheck.Simple (shellCheck, ShellCheckComment, scLine, scColumn, scSeverity, scCode, scMessage) where
+ 
+ import Data.List
+ import Data.Maybe
+-import ShellCheck.Analytics hiding (runTests)
++import ShellCheck.Analytics
+ import ShellCheck.Options
+-import ShellCheck.Parser hiding (runTests)
+-import Test.QuickCheck.All (quickCheckAll)
++import ShellCheck.Parser
+ import Text.Parsec.Pos
+ 
+ shellCheck :: AnalysisOptions -> String -> [ShellCheckComment]
+@@ -74,7 +73,3 @@ prop_optionDisablesIssue1 =
+ 
+ prop_optionDisablesIssue2 =
+     null $ shellCheck (defaultAnalysisOptions { optionExcludes = [2148, 1037] }) "echo \"$10\""
+-
+-return []
+-runTests = $quickCheckAll
+-
