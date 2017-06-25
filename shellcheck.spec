@@ -1,19 +1,18 @@
 #
 # Conditional build:
 %bcond_with	tests		# disable all tests for now to avoid linking QuickCheck
-%bcond_with	prof		# disable profiling symbols
 
 %define		pkg_name	ShellCheck
 Summary:	Shell script analysis tool
 Name:		shellcheck
-Version:	0.3.7
+Version:	0.4.6
 Release:	0.1
-License:	AGPL v3+
+License:	GPL v3+
 Group:		Development
 Source0:	https://hackage.haskell.org/package/%{pkg_name}-%{version}/%{pkg_name}-%{version}.tar.gz
-# Source0-md5:	5e570545d9168e085c465e0fd8902340
+# Source0-md5:	af1b59fc0ac1836bb993b0368febe26f
 Patch0:		ShellCheck-disable-TemplateHaskell-runTests.patch
-URL:		http://www.shellcheck.net/about.html
+URL:		http://www.shellcheck.net/
 BuildRequires:	ghc-Cabal-devel
 BuildRequires:	ghc-rpm-macros
 # Begin cabal-rpm deps:
@@ -23,11 +22,8 @@ BuildRequires:	ghc-directory-devel
 BuildRequires:	ghc-json-devel
 BuildRequires:	ghc-mtl-devel
 BuildRequires:	ghc-parsec-devel
+BuildRequires:	ghc-quickcheck-devel
 BuildRequires:	ghc-regex-tdfa-devel
-BuildRequires:	ghc-transformers-devel
-%if %{with tests}
-BuildRequires:	ghc-QuickCheck-devel
-%endif
 # End cabal-rpm deps
 BuildRequires:	pandoc
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
@@ -62,29 +58,24 @@ This package provides the Haskell %{pkg_name} library development
 files.
 
 %prep
-%setup -q
-%if %{without tests}
-%patch0 -p1
-%endif
+%setup -q -n ShellCheck-%{version}
 
 %build
-LANG=en_US.utf8
 %ghc_lib_build
 
 pandoc -s -t man shellcheck.1.md -o shellcheck.1
 
 %check
 %if %{with tests}
-%cabal test
+%cabal_test
 %endif
 
 %install
 rm -rf $RPM_BUILD_ROOT
 %ghc_lib_install
+%ghc_fix_rpath %{pkgver}
 
 cp -p shellcheck.1 $RPM_BUILD_ROOT%{_mandir}/man1/shellcheck.1
-
-%ghc_fix_dynamic_rpath shellcheck
 
 %clean
 rm -rf $RPM_BUILD_ROOT
